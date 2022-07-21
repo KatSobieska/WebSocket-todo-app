@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import io from "socket.io-client";
 const { v4: uuidv4 } = require("uuid");
 
+const socket = io("http://localhost:8000");
+
 const App = () => {
-  const [socket, setSocket] = useState("");
   const [tasks, setTasks] = useState([]);
   const [taskName, setTaskName] = useState("");
 
   useEffect(() => {
-    const socket = io("http://localhost:8000");
-    setSocket(socket);
     socket.on("updateData", (tasks) => {
       updateTasks(tasks);
     });
@@ -19,16 +18,20 @@ const App = () => {
     socket.on("removeTask", (id) => {
       removeTask(id);
     });
+
+    return () => {
+      socket.off("updateData");
+      socket.off("addTask");
+      socket.off("removeTask");
+    };
   }, []);
 
   const updateTasks = (taskData) => {
     setTasks(taskData);
   };
 
-  const removeTask = (taskId) => {
+  const removeTask = (taskId) =>
     setTasks((tasks) => tasks.filter((task) => task.id !== taskId));
-    socket.emit("removeTask", taskId);
-  };
 
   const addTask = (task) => {
     setTasks((tasks) => [...tasks, task]);
@@ -38,6 +41,12 @@ const App = () => {
     e.preventDefault();
     addTask({ name: taskName, id: uuidv4() });
     socket.emit("addTask", { name: taskName, id: uuidv4() });
+  };
+
+  const submitRemoval = (e, taskId) => {
+    e.preventDefault();
+    removeTask(taskId);
+    socket.emit("removeTask", taskId);
   };
 
   return (
@@ -55,7 +64,7 @@ const App = () => {
               {task.name}
               <button
                 className="btn btn--red"
-                onClick={() => removeTask(task.id)}
+                onClick={(e) => submitRemoval(e, task.id)}
               >
                 Remove
               </button>
