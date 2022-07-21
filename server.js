@@ -19,12 +19,12 @@ io.on("connection", (socket) => {
   console.log("Client id:" + socket.id);
   socket.emit("updateData", tasks);
   socket.on("addTask", (task) => {
-    console.log("Task added");
+    console.log("Task added" + socket.id);
     tasks.push(task);
     socket.broadcast.emit("addTask", task);
   });
   socket.on("removeTask", () => {
-    console.log("Task removed");
+    console.log("Task removed" + socket.id);
     const task = tasks.find((task) => task.id === socket.id);
     tasks.splice(tasks.indexOf(task), 1);
     socket.broadcast.emit("removeTask", task);
